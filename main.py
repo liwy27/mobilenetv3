@@ -192,13 +192,13 @@ def read_tfrecord_pipeline(input_file):
 
     def convert_tfrecord(record):
         name_to_features = {
-            "image_raw": tf.FixedLenFeature([], tf.string),
+            "image": tf.FixedLenFeature([], tf.string),
             "label": tf.FixedLenFeature([], tf.int64),
         }
 
         example = tf.parse_single_example(record, name_to_features)
-        example['image_raw'] = tf.decode_raw(example['image_raw'], tf.float32)
-        example['image_raw'] = tf.reshape(example['image_raw'], [224, 224, 3])
+        example['image'] = tf.decode_raw(example['image'], tf.float32)
+        example['image'] = tf.reshape(example['image'], [224, 224, 3])
 
         return example
 
@@ -212,8 +212,8 @@ def read_tfrecord_pipeline(input_file):
     while True:
         try:
             a = sess.run(data)
-            print(a['image_raw'].shape)
-            b = a['image_raw'][0]
+            print(a['image'].shape)
+            b = a['image'][0]
             b = b[:, :, (2, 1, 0)]
             cv.imshow("img", b)
             cv.waitKey()
@@ -223,5 +223,5 @@ def read_tfrecord_pipeline(input_file):
 
 
 if __name__ == '__main__':
-    # read_tfrecord_pipeline(FLAGS.train_paths)
-    main()
+    read_tfrecord_pipeline(FLAGS.train_paths)
+    # main()
