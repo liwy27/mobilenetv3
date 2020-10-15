@@ -1,5 +1,7 @@
 import glob
 import os.path
+from PIL import Image
+import numpy as np
 import tensorflow as tf
 
 
@@ -41,20 +43,17 @@ def get_img_data(sub_dirs, INPUT_DATA, sess):
             continue
         index = 0
         for file_name in file_list:
-            image_raw_data = tf.gfile.FastGFile(file_name, 'rb').read()
-            image = tf.io.decode_jpeg(image_raw_data, channels=3)
-            image = tf.cast(image, tf.float32) / 128. - 1
-            image = tf.image.resize_images(image, [224, 224])
-            image_value = sess.run(image)
-            image_raw = image_value.tostring()
+            image = np.array(Image.open(file_name).resize((224, 224))).astype(np.float) / 128 - 1
+            image = image.tobytes()
 
             tf_example = tf.train.Example(features=tf.train.Features(feature={
-                'image_raw': _bytes_feature(image_raw),
+                'image': _bytes_feature(image),
                 'label': _int64_feature(current_label)
             }))
 
             index = index + 1
             if index % 50 == 0:
+                writer.flush()
                 writer.close()
                 record_name = INPUT_DATA + "-%.2d.tfrecords" % (index // 50)
                 print(record_name)
@@ -71,7 +70,6 @@ def create_image_lists(sess):
     get_img_data(sub_dirs, INPUT_TRAIN_DATA, sess)
 
     sub_test_dirs = [x[0] for x in os.walk(INPUT_TEST_DATA)]
-    writer_test = tf.io.TFRecordWriter(OUTPUT_TEST_FILE)
     get_img_data(sub_test_dirs, INPUT_TEST_DATA, sess)
 
 
